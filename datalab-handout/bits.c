@@ -143,9 +143,7 @@ NOTES:
  *   Rating: 1
  */
 int bitXor(int x, int y) {
-  int or = ~((~x) & (~y));
-  int nand = ~(x & y);
-  return or & nand;
+  return (~x & y) | (x & ~y);
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -215,7 +213,8 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return (y & (~(!(!x)) + 1)) | (z & (~(!x) + 1)); 
+  x = !(!(x)); // convert it to 0 or 1
+  return (y & (x << 31 >> 31)) | (z & ~(x << 31 >> 31));
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -227,7 +226,7 @@ int conditional(int x, int y, int z) {
 int isLessOrEqual(int x, int y) {
   int neg_x = ~x + 1;
   int same_sign = !((x >> 31) ^ (y >> 31));
-  int same_sigh_rst = !(((y + neg_x) >> 31) ^ 0); // subtraction & comparison with -1
+  int same_sigh_rst = !(((y + neg_x) >> 31) ^ 0); // subtraction & comparison
   int diff_sign = ~same_sign;
   int diff_sign_rst = !(!(x >> 31));
   return ((~diff_sign + 1) & diff_sign_rst) | ((~same_sign + 1) & same_sigh_rst);
@@ -242,7 +241,8 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return ((x | ~x + 1) >> 31) + 1;
+  int neg = ~x + 1;
+  return ((x | neg) >> 31) + 1;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -257,7 +257,33 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  return 0;
+  int copy = x;
+  int tmp = 16;
+
+  int tmp_plus = tmp + 8;
+  int tmp_minus = tmp + ~8 + 1;
+  int eql = !(~(~(x << tmp >> tmp) ^ copy)) << 31 >> 31; // 0b111..11 or 0b000..00
+  tmp = (tmp_plus & eql) | (tmp_minus & (~eql));
+  
+  tmp_plus = tmp + 4;
+  tmp_minus = tmp + ~4 + 1;
+  eql = !(~(~(x << tmp >> tmp) ^ copy)) << 31 >> 31; // 0b111..11 or 0b000..00
+  tmp = (tmp_plus & eql) | (tmp_minus & (~eql));
+
+  tmp_plus = tmp + 2;
+  tmp_minus = tmp + ~2 + 1;
+  eql = !(~(~(x << tmp >> tmp) ^ copy)) << 31 >> 31; // 0b111..11 or 0b000..00
+  tmp = (tmp_plus & eql) | (tmp_minus & (~eql));
+
+  tmp_plus = tmp + 1;
+  tmp_minus = tmp + ~0;
+  eql = !(~(~(x << tmp >> tmp) ^ copy)) << 31 >> 31; // 0b111..11 or 0b000..00
+  tmp = (tmp_plus & eql) | (tmp_minus & (~eql));
+
+  eql = !(~(~(x << tmp >> tmp) ^ copy)) << 31 >> 31; // 0b111..11 or 0b000..00
+  int rst = ((32 + ~tmp + 1) & eql) | ((32 + ~tmp + 1 + 1) & (~eql));
+
+  return rst;
 }
 //float
 /* 
