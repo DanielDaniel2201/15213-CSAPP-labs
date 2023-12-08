@@ -298,26 +298,26 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
-  unsigned posInf = 0x7f800000;
-  unsigned negInf = 0xff800000;
+  unsigned expMask = 0b011111111 << 23;
   unsigned fracMask = (1 << 23) - 1; // 0b0 00000000 1111..11
   unsigned signMask = 1 << 31;
 
-  unsigned expAllOnes = (posInf & uf) == posInf;
-  unsigned expAllZeros = (posInf & uf) == 0;
+  unsigned expField = (expMask & uf) >> 23;
+  unsigned expAllOnes = expField == 0b11111111;
+  unsigned expAllZeros = expField == 0;
   unsigned fracAllZeros = (fracMask & uf) == 0;
 
   unsigned isZero = expAllZeros && fracAllZeros;
-  unsigned isInf = (uf == posInf) || (uf == negInf);
+  unsigned isInf = expAllOnes && fracAllZeros;
   unsigned isNaN = expAllOnes && !fracAllZeros;
   unsigned isNorm = !expAllZeros && !expAllOnes;
-  unsigned isNeg = (signMask & uf);
 
   if (isZero || isInf || isNaN) {
     return uf;
   } else if (isNorm) {
     return uf + (1 << 23);
   } else { // is denormalized number
+    unsigned isNeg = (signMask & uf);
     return (uf << 1) + isNeg;
   }
 }
