@@ -373,5 +373,14 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+  if (x < -23 - 126) { // too small for denorm
+    return 0;
+  } else if (x > 127) { // too large
+    return 0b011111111u << 23;
+  } else if (x >= -126) { // norm: 127 >= x >= -126
+    unsigned expField = x + 127;
+    return expField << 23;
+  } else { // denorm:  -126 > x >= -23 - 126
+    return 1 << (23 + 126 + x);
+  }
 }
