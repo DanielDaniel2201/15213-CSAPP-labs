@@ -334,31 +334,28 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  unsigned posInf = 0x7f800000;
-  unsigned negInf = 0xff800000;
   unsigned fracMask = (1 << 23) - 1; // 0b0 00000000 1111..11
+  unsigned expMask = 0b011111111 << 23;
   unsigned signMask = 1 << 31;
 
-  unsigned expAllOnes = (posInf & uf) == posInf;
+  unsigned expField = (expMask & uf) >> 23;
+  unsigned expAllOnes = expField == 0b11111111;
   unsigned fracAllZeros = (fracMask & uf) == 0;
 
-  unsigned isInf = (uf == posInf) || (uf == negInf);
+  unsigned isInf = expAllOnes && fracAllZeros;
   unsigned isNaN = expAllOnes && !fracAllZeros;
-  unsigned isNeg = (signMask & uf) != 0;
 
-  unsigned expMask = 0b011111111 << 23;
-  unsigned expField = (expMask & uf) >> 23;
-
-  unsigned lessThan1 = expField < 127;
-
-  int E = ((posInf & uf) >> 23) - 127;
+  int E = expField - 127;
   int num = 1 << E;
+
+  unsigned lessThan1 = E < 0;
 
   if (lessThan1) {
     return 0;
   } else if (isNaN || isInf || E > 31) {
     return 0x80000000u;
   } else { // is normalized number
+    unsigned isNeg = (signMask & uf) != 0;
     return isNeg ? -num : num;
   }
 }
