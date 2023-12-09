@@ -346,7 +346,6 @@ int floatFloat2Int(unsigned uf) {
   unsigned isNaN = expAllOnes && !fracAllZeros;
 
   int E = expField - 127;
-  int num = 1 << E;
 
   unsigned lessThan1 = E < 0;
 
@@ -356,6 +355,7 @@ int floatFloat2Int(unsigned uf) {
     return 0x80000000u;
   } else { // is normalized number
     unsigned isNeg = (signMask & uf) != 0;
+    int num = 1 << E;
     return isNeg ? -num : num;
   }
 }
